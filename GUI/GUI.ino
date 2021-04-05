@@ -29,6 +29,19 @@ gslc_tsElemRef* m_reverb_bypass   = NULL;
 //<Save_References !End!>
 
 // User Globals
+#include <Audio.h>
+#include <Wire.h>
+#include <SD.h>
+#include <SPI.h>
+#include <SerialFlash.h>
+#include <Bounce.h>
+
+AudioSynthWaveform    waveform1;
+AudioOutputI2S        i2s1;
+AudioConnection       patchCord1(waveform1, 0, i2s1, 0);
+AudioConnection       patchCord2(waveform1, 0, i2s1, 1);
+AudioControlSGTL5000  sgtl5000_1;
+
 int16_t currentPreset = 0;
 bool homeBypass = false;
 
@@ -49,6 +62,9 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 
   if ( eTouch == GSLC_TOUCH_UP_IN ) {
     // From the element's ID we can determine which button was pressed.
+    waveform1.frequency(440);
+    waveform1.amplitude(0.9);
+    
     switch (pElem->nId) {
 //<Button Enums !Start!>
       case E_HOME_FLANGE:
@@ -102,6 +118,9 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       default:
         break;
     }
+
+    delay(200);
+    waveform1.amplitude(0);
   }
   return true;
 }
@@ -122,10 +141,14 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 
 void setup()
 {
+  AudioMemory(10);
   // ------------------------------------------------
   // Initialize
   // ------------------------------------------------
-  Serial.begin(9600);
+  Serial.begin(115200);
+  sgtl5000_1.enable();
+  sgtl5000_1.volume(0.3);
+  waveform1.begin(WAVEFORM_SINE);
   // Wait for USB Serial 
   //delay(1000);  // NOTE: Some devices require a delay after Serial.begin() before serial port can be used
 
