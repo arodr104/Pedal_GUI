@@ -19,4 +19,3 @@ T_CLK | 13 (SCK)	|
 T_CS | 33 |
 T_DIN | 11 (DOUT)	|
 T_DO | 12 (DIN)	|
-T_IRQ | 2	|
