@@ -65,10 +65,7 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
   char acTxt[MAX_STR];
 
   if ( eTouch == GSLC_TOUCH_UP_IN ) {
-    // From the element's ID we can determine which button was pressed.
-    waveform1.frequency(440);
-    waveform1.amplitude(0.9);
-    
+    // From the element's ID we can determine which button was pressed. 
     switch (pElem->nId) {
 //<Button Enums !Start!>
       case E_HOME_FLANGE:
@@ -122,9 +119,6 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       default:
         break;
     }
-
-    delay(200);
-    waveform1.amplitude(0);
   }
   return true;
 }
@@ -156,7 +150,6 @@ void setup()
   sgtl5000_1.muteHeadphone();
   sgtl5000_1.unmuteLineout();
   outMix.gain(0, 0.8);
-  waveform1.begin(WAVEFORM_SINE);
   // Wait for USB Serial 
   //delay(1000);  // NOTE: Some devices require a delay after Serial.begin() before serial port can be used
 
