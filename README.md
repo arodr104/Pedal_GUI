@@ -16,7 +16,7 @@ SCK	| 13 (SCK)	|
 LED | VIN |
 SDO (MISO)	| 12 (DIN)	|
 T_CLK | 13 (SCK)	|
-T_CS | 8 |
+T_CS | 33 |
 T_DIN | 11 (DOUT)	|
 T_DO | 12 (DIN)	|
 T_IRQ | 2	|
