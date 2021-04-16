@@ -37,10 +37,14 @@ gslc_tsElemRef* m_reverb_bypass   = NULL;
 #include <Bounce.h>
 
 AudioSynthWaveform    waveform1;
+AudioInputI2S         lineIn;  
 AudioOutputI2S        i2s1;
+AudioMixer4              outMix;
 AudioConnection       patchCord1(waveform1, 0, i2s1, 0);
 AudioConnection       patchCord2(waveform1, 0, i2s1, 1);
 AudioControlSGTL5000  sgtl5000_1;
+AudioConnection          outputCord(outMix, 0, i2s1, 1);  
+AudioConnection          bypassCord(lineIn, 1, outMix, 3);
 
 int16_t currentPreset = 0;
 bool homeBypass = false;
@@ -147,7 +151,11 @@ void setup()
   // ------------------------------------------------
   Serial.begin(115200);
   sgtl5000_1.enable();
-  sgtl5000_1.volume(0.3);
+  sgtl5000_1.inputSelect(AUDIO_INPUT_LINEIN);
+  sgtl5000_1.volume(0.8);
+  sgtl5000_1.muteHeadphone();
+  sgtl5000_1.unmuteLineout();
+  outMix.gain(0, 0.8);
   waveform1.begin(WAVEFORM_SINE);
   // Wait for USB Serial 
   //delay(1000);  // NOTE: Some devices require a delay after Serial.begin() before serial port can be used
