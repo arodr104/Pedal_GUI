@@ -80,8 +80,8 @@ extern "C" {
   // -----------------------------------------------------------------------------
 
   // For shields, the following pinouts are typically hardcoded
-  #define ADAGFX_PIN_CS       21    // Display chip select
-  #define ADAGFX_PIN_DC       20    // Display SPI data/command
+  #define ADAGFX_PIN_CS       10    // Display chip select
+  #define ADAGFX_PIN_DC       9     // Display SPI data/command
   #define ADAGFX_PIN_RST      255   // Display Reset (255=UNUSED)
 
   // Display interface type
@@ -91,12 +91,12 @@ extern "C" {
   // Display interface SPI
   // - Hardware (default) SPI: the following definitions are unused
   // - Software / Hardware (alternate) SPI: the following pins need to be defined
-  #define ADAGFX_PIN_MOSI     7
+  #define ADAGFX_PIN_MOSI     11
   #define ADAGFX_PIN_MISO     12
-  #define ADAGFX_PIN_CLK      14
+  #define ADAGFX_PIN_CLK      13
 
   // SD Card
-  #define ADAGFX_PIN_SDCS     10    // SD card chip select (if GSLC_SD_EN=1)
+  #define ADAGFX_PIN_SDCS     4     // SD card chip select (if GSLC_SD_EN=1)
 
 
 
@@ -120,7 +120,7 @@ extern "C" {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
   // Touch bus & pinout
-  #define XPT2046_CS     8
+  #define XPT2046_CS     33
 
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -131,10 +131,10 @@ extern "C" {
 
   // Calibration settings from diag_ard_touch_calib:
   // DRV_TOUCH_XPT2046:
-  #define ADATOUCH_X_MIN    246
-  #define ADATOUCH_X_MAX    3837
-  #define ADATOUCH_Y_MIN    3925
-  #define ADATOUCH_Y_MAX    370
+  #define ADATOUCH_X_MIN    3866
+  #define ADATOUCH_X_MAX    188
+  #define ADATOUCH_Y_MIN    3914
+  #define ADATOUCH_Y_MAX    350
   #define ADATOUCH_REMAP_YX 0    // Some touch controllers may swap X & Y coords
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
