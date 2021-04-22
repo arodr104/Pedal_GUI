@@ -117,6 +117,9 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
     // From the element's ID we can determine which button was pressed. 
     switch (pElem->nId) {
 //<Button Enums !Start!>
+      // -------------------------------
+      // Home Screen
+      // -------------------------------
       case E_HOME_FLANGE:
         gslc_SetPageCur(&m_gui, 1);
         break;
@@ -179,26 +182,59 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         snprintf(acTxt, MAX_STR, "%d", currentPreset);
         gslc_ElemSetTxtStr(&m_gui, m_current_preset, acTxt);
         break;
-        
+
+      // -------------------------------
+      // Flange Screen
+      // -------------------------------
       case E_FLANGE_BACK:
         gslc_SetPageCur(&m_gui, 0);
         break;
         
       case E_FLANGE_BYPASS:
         break;
-        
+
+      // -------------------------------
+      // Reverb Screen
+      // -------------------------------
       case E_REVERB_BACK:
         gslc_SetPageCur(&m_gui, 0);
         break;
         
       case E_REVERB_BYPASS:
-        break;
+        if (fvOn)
+        {
+          fvOutCord.disconnect();
+          fvOn = false;
+        }
         
+        else
+        {
+          fvOutCord.connect();
+          fvOn = true;
+        }
+        
+        break;
+
+      // -------------------------------
+      // Amp Screen
+      // -------------------------------
       case E_AMP_BACK:
         gslc_SetPageCur(&m_gui, 0);
         break;
         
       case E_AMP_BYPASS:
+        if (distOn)
+        {
+          distOutCord.disconnect();
+          distOn = false;
+        }
+        
+        else
+        {
+          distOutCord.connect();
+          distOn = true;
+        }
+        
         break;
         
 //<Button Enums !End!>
@@ -226,12 +262,9 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 void setup()
 {
   AudioMemory(524);
-  // ------------------------------------------------
-  // Initialize
-  // ------------------------------------------------
   Serial.begin(115200);
   
-  //disconnect effects at first
+  // disconnect effects and initialize bypass
   flangeOutCord.disconnect();
   fvOutCord.disconnect();
   distOutCord.disconnect();
