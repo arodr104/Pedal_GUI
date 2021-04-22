@@ -20,6 +20,8 @@
 
 // Include any extended elements
 //<Includes !Start!>
+// Include extended elements
+#include "elem/XSlider.h"
 //<Includes !End!>
 
 // ------------------------------------------------
@@ -47,13 +49,13 @@
 //<Enum !Start!>
 enum {E_PG_MAIN,E_FLANGE_PAGE,E_REVERB_PAGE,E_AMP_PAGE};
 enum {E_AMP_BACK,E_AMP_BYPASS,E_AMP_BYPASS_STATUS,E_AMP_GAIN
-      ,E_AMP_TITLE,E_FLANGE_BACK,E_FLANGE_BYPASS,E_FLANGE_BYPASS_STATUS
-      ,E_FLANGE_DEPTH,E_FLANGE_MOD_FREQ,E_FLANGE_OFFSET,E_FLANGE_TITLE
-      ,E_HOME_AMP,E_HOME_BYPASS,E_HOME_BYPASS_STATUS,E_HOME_CURR_PRESET
-      ,E_HOME_FLANGE,E_HOME_PRESET,E_HOME_REVERB,E_HOME_TITLE_TEXT
-      ,E_REVERB_BACK,E_REVERB_BYPASS,E_REVERB_BYPASS_STATUS
-      ,E_REVERB_DAMPING,E_REVERB_DRY_LEVEL,E_REVERB_ROOM_SIZE
-      ,E_REVERB_TITLE};
+      ,E_AMP_GAIN_SLIDER,E_AMP_TITLE,E_FLANGE_BACK,E_FLANGE_BYPASS
+      ,E_FLANGE_BYPASS_STATUS,E_FLANGE_DEPTH,E_FLANGE_MOD_FREQ
+      ,E_FLANGE_OFFSET,E_FLANGE_TITLE,E_HOME_AMP,E_HOME_BYPASS
+      ,E_HOME_BYPASS_STATUS,E_HOME_CURR_PRESET,E_HOME_FLANGE
+      ,E_HOME_PRESET,E_HOME_REVERB,E_HOME_TITLE_TEXT,E_REVERB_BACK
+      ,E_REVERB_BYPASS,E_REVERB_BYPASS_STATUS,E_REVERB_DAMPING
+      ,E_REVERB_DRY_LEVEL,E_REVERB_ROOM_SIZE,E_REVERB_TITLE};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
 enum {E_FREEMONO9,E_FREESANS9,MAX_FONT};
 //<Enum !End!>
@@ -77,7 +79,7 @@ enum {E_FREEMONO9,E_FREESANS9,MAX_FONT};
 #define MAX_ELEM_REVERB_PAGE 7 // # Elems total on page
 #define MAX_ELEM_REVERB_PAGE_RAM MAX_ELEM_REVERB_PAGE // # Elems in RAM
 
-#define MAX_ELEM_AMP_PAGE 5 // # Elems total on page
+#define MAX_ELEM_AMP_PAGE 6 // # Elems total on page
 #define MAX_ELEM_AMP_PAGE_RAM MAX_ELEM_AMP_PAGE // # Elems in RAM
 //<ElementDefines !End!>
 
@@ -98,6 +100,7 @@ gslc_tsElem                     m_asPage3Elem[MAX_ELEM_REVERB_PAGE_RAM];
 gslc_tsElemRef                  m_asPage3ElemRef[MAX_ELEM_REVERB_PAGE];
 gslc_tsElem                     m_asPage4Elem[MAX_ELEM_AMP_PAGE_RAM];
 gslc_tsElemRef                  m_asPage4ElemRef[MAX_ELEM_AMP_PAGE];
+gslc_tsXSlider                  m_sXSlider1;
 
 #define MAX_STR                 100
 
@@ -109,6 +112,7 @@ gslc_tsElemRef                  m_asPage4ElemRef[MAX_ELEM_AMP_PAGE];
 
 // Element References for direct access
 //<Extern_References !Start!>
+extern gslc_tsElemRef* m_Amp_Gain_Slider;
 extern gslc_tsElemRef* m_current_preset;
 extern gslc_tsElemRef* m_flange_bypass;
 extern gslc_tsElemRef* m_home_bypass;
@@ -321,6 +325,14 @@ void InitGUIslice_gen()
     (char*)m_sDisplayText16,5,E_FREESANS9);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   m_p_amp_bypass_status = pElemRef;
+
+  // Create slider E_AMP_GAIN_SLIDER 
+  pElemRef = gslc_ElemXSliderCreate(&m_gui,E_AMP_GAIN_SLIDER,E_AMP_PAGE,&m_sXSlider1,
+          (gslc_tsRect){62,29,80,20},0,100,50,5,false);
+  gslc_ElemXSliderSetStyle(&m_gui,pElemRef,false,GSLC_COL_BLUE,10,5,GSLC_COL_GRAY_DK2);
+  gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT1,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_Amp_Gain_Slider = pElemRef;
 //<InitGUI !End!>
 
 //<Startup !Start!>

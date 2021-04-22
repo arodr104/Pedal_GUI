@@ -21,6 +21,7 @@
 
 // Save some element references for direct access
 //<Save_References !Start!>
+gslc_tsElemRef* m_Amp_Gain_Slider = NULL;
 gslc_tsElemRef* m_current_preset  = NULL;
 gslc_tsElemRef* m_flange_bypass   = NULL;
 gslc_tsElemRef* m_home_bypass     = NULL;
@@ -41,7 +42,7 @@ gslc_tsElemRef* m_reverb_bypass   = NULL;
 float flangeOffset = FLANGE_DELAY_LENGTH/4;
 float flangeDepth = FLANGE_DELAY_LENGTH/4;
 float flangeModFreq = 1;
-float ampGain = 30;
+float ampGain = 20;
 float fvDry = 0.4;
 float fvWet = 0.9;
 float fvRoomSize = 0.6;
@@ -117,6 +118,7 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
     // From the element's ID we can determine which button was pressed. 
     switch (pElem->nId) {
 //<Button Enums !Start!>
+
       // -------------------------------
       // Home Screen
       // -------------------------------
@@ -170,7 +172,6 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
           bypassSave[2] = fvOn;
           delay(300);
         }
-
         gslc_ElemSetTxtStr(&m_gui, m_home_bypass, acTxt);
         break;
         
@@ -182,7 +183,6 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         snprintf(acTxt, MAX_STR, "%d", currentPreset);
         gslc_ElemSetTxtStr(&m_gui, m_current_preset, acTxt);
         break;
-
       // -------------------------------
       // Flange Screen
       // -------------------------------
@@ -192,7 +192,6 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         
       case E_FLANGE_BYPASS:
         break;
-
       // -------------------------------
       // Reverb Screen
       // -------------------------------
@@ -214,10 +213,8 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
           fvOutCord.connect();
           fvOn = true;
         }
-
         gslc_ElemSetTxtStr(&m_gui, m_reverb_bypass, acTxt);
         break;
-
       // -------------------------------
       // Amp Screen
       // -------------------------------
@@ -260,8 +257,31 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 //<Listbox Callback !End!>
 //<Draw Callback !Start!>
 //<Draw Callback !End!>
-//<Slider Callback !Start!>
-//<Slider Callback !End!>
+
+// Callback function for when a slider's position has been updated
+bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
+{
+  gslc_tsGui*     pGui     = (gslc_tsGui*)(pvGui);
+  gslc_tsElemRef* pElemRef = (gslc_tsElemRef*)(pvElemRef);
+  gslc_tsElem*    pElem    = gslc_GetElemFromRef(pGui,pElemRef);
+  int16_t         nVal;
+
+  // From the element's ID we can determine which slider was updated.
+  switch (pElem->nId) {
+//<Slider Enums !Start!>
+    case E_AMP_GAIN_SLIDER:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Amp_Gain_Slider);
+      ampBlock.gain(nVal * 0.4);
+      break;
+
+//<Slider Enums !End!>
+    default:
+      break;
+  }
+
+  return true;
+}
 //<Tick Callback !Start!>
 //<Tick Callback !End!>
 
