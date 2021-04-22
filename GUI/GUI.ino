@@ -183,6 +183,7 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         snprintf(acTxt, MAX_STR, "%d", currentPreset);
         gslc_ElemSetTxtStr(&m_gui, m_current_preset, acTxt);
         break;
+        
       // -------------------------------
       // Flange Screen
       // -------------------------------

@@ -328,7 +328,7 @@ void InitGUIslice_gen()
 
   // Create slider E_AMP_GAIN_SLIDER 
   pElemRef = gslc_ElemXSliderCreate(&m_gui,E_AMP_GAIN_SLIDER,E_AMP_PAGE,&m_sXSlider1,
-          (gslc_tsRect){62,29,80,20},0,100,50,5,false);
+          (gslc_tsRect){62,29,140,20},0,100,50,5,false);
   gslc_ElemXSliderSetStyle(&m_gui,pElemRef,false,GSLC_COL_BLUE,10,5,GSLC_COL_GRAY_DK2);
   gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
   gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT1,GSLC_COL_BLACK,GSLC_COL_BLACK);
