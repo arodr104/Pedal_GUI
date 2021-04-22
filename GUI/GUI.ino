@@ -203,16 +203,19 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_REVERB_BYPASS:
         if (fvOn)
         {
+          snprintf(acTxt, MAX_STR, "OFF");
           fvOutCord.disconnect();
           fvOn = false;
         }
         
         else
         {
+          snprintf(acTxt, MAX_STR, "ON");
           fvOutCord.connect();
           fvOn = true;
         }
-        
+
+        gslc_ElemSetTxtStr(&m_gui, m_reverb_bypass, acTxt);
         break;
 
       // -------------------------------
@@ -225,16 +228,19 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_AMP_BYPASS:
         if (distOn)
         {
+          snprintf(acTxt, MAX_STR, "OFF");
           distOutCord.disconnect();
           distOn = false;
         }
         
         else
         {
+          snprintf(acTxt, MAX_STR, "ON");
           distOutCord.connect();
           distOn = true;
         }
         
+        gslc_ElemSetTxtStr(&m_gui, m_p_amp_bypass_status, acTxt);
         break;
         
 //<Button Enums !End!>
