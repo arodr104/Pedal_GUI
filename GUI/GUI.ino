@@ -36,17 +36,65 @@ gslc_tsElemRef* m_reverb_bypass   = NULL;
 #include <SerialFlash.h>
 #include <Bounce.h>
 
-AudioSynthWaveform    waveform1;
-AudioInputI2S         lineIn;  
-AudioOutputI2S        i2s1;
-AudioMixer4              outMix;
-AudioConnection       patchCord1(waveform1, 0, i2s1, 0);
-AudioConnection       patchCord2(waveform1, 0, i2s1, 1);
-AudioControlSGTL5000  sgtl5000_1;
-AudioConnection          outputCord(outMix, 0, i2s1, 1);  
-AudioConnection          bypassCord(lineIn, 1, outMix, 3);
+// startup settings for the effects
+#define FLANGE_DELAY_LENGTH (4*AUDIO_BLOCK_SAMPLES)
+float flangeOffset = FLANGE_DELAY_LENGTH/4;
+float flangeDepth = FLANGE_DELAY_LENGTH/4;
+float flangeModFreq = 1;
+float ampGain = 30;
+float fvDry = 0.4;
+float fvWet = 0.9;
+float fvRoomSize = 0.6;
+float fvDamp = 0.4;
+float maxDepth = 165;
+float maxFreq = 3.5;
+float masterVol = 0.8;
 
+//setting on/off logic
+bool fvOn = false;
+bool distOn = false;
+bool flangeOn = false;
+bool bypassOn = false;
+int activeEff = 0;
+
+//save states and their info
+char currentEffect;
 int16_t currentPreset = 0;
+bool save1[3] = { false };
+bool save2[3] = { false };
+bool save3[3] = { false };
+bool bypassSave[3] = { false } ;
+float paramsSave1[8] = {flangeOffset, flangeDepth, flangeModFreq, ampGain, 
+                       fvDry, fvWet, fvRoomSize, fvDamp};
+float paramsSave2[8] = {flangeOffset, flangeDepth, flangeModFreq, ampGain, 
+                       fvDry, fvWet, fvRoomSize, fvDamp};
+float paramsSave3[8] = {flangeOffset, flangeDepth, flangeModFreq, ampGain, 
+                       fvDry, fvWet, fvRoomSize, fvDamp};
+                       
+
+// GUItool: begin automatically generated code
+AudioControlSGTL5000     sgtl5000_1;
+AudioInputI2S            lineIn;         
+AudioEffectFreeverb      freeverbBlock;     
+AudioEffectFlange        flangeBlock;       
+AudioMixer4              mixFVOut;  
+AudioMixer4              bypassMixer;       
+AudioAmplifier           ampBlock;        
+AudioMixer4              outMix;        
+AudioOutputI2S           lineOut;     
+AudioConnection          fvInCord(lineIn, 1, freeverbBlock, 0);
+AudioConnection          distInCord(lineIn, 1, ampBlock, 0);
+AudioConnection          flangeInCord(lineIn, 1, flangeBlock, 0);
+AudioConnection          fvDryCord(lineIn, 1, mixFVOut, 1);
+AudioConnection          fvMixCord(freeverbBlock, 0, mixFVOut, 0);
+AudioConnection          flangeOutCord(flangeBlock, 0, outMix, 2);
+AudioConnection          fvOutCord(mixFVOut, 0, outMix, 0);
+AudioConnection          distOutCord(ampBlock, 0, outMix, 1);
+AudioConnection          outputCord(outMix, 0, lineOut, 1);     
+AudioConnection          bypassCord(lineIn, 1, bypassMixer, 3); //use this for bypass
+AudioConnection          bypassOut(bypassMixer, 0, outMix, 3);
+// GUItool: end automatically generated code
+
 bool homeBypass = false;
 
 // Define debug message function
@@ -56,6 +104,7 @@ static int16_t DebugOut(char ch) { if (ch == (char)'\n') Serial.println(""); els
 // Callback Methods
 // ------------------------------------------------
 // Common Button callback
+
 bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int16_t nY)
 {
   // Typecast the parameters to match the GUI and element types
@@ -71,27 +120,57 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
       case E_HOME_FLANGE:
         gslc_SetPageCur(&m_gui, 1);
         break;
+        
       case E_HOME_AMP:
         gslc_SetPageCur(&m_gui, 3);
         break;
+        
       case E_HOME_REVERB:
         gslc_SetPageCur(&m_gui, 2);
         break;
-      case E_HOME_BYPASS:
-        if (homeBypass)
-        {
-          homeBypass = false;
-          snprintf(acTxt, MAX_STR, "OFF");
-          gslc_ElemSetTxtStr(&m_gui, m_home_bypass, acTxt);
-        }
-        else
+        
+      case E_HOME_BYPASS:   
+        if (!homeBypass) // Turn on bypass
         {
           homeBypass = true;
           snprintf(acTxt, MAX_STR, "ON");
-          gslc_ElemSetTxtStr(&m_gui, m_home_bypass, acTxt);
+          bypassOut.disconnect();
+          
+          if (bypassSave[0] == true)
+            {
+              flangeOutCord.connect();
+            }
+            
+          if (bypassSave[1] == true)
+            {
+              distOutCord.connect();
+            }
+            
+          if (bypassSave[2] == true)
+            {
+              fvOutCord.connect();
+            }
+            
+          delay(300);
         }
         
+        else // Turn off bypass
+        {
+          homeBypass = false;
+          snprintf(acTxt, MAX_STR, "OFF");
+          flangeOutCord.disconnect();
+          fvOutCord.disconnect();
+          distOutCord.disconnect();
+          bypassOut.connect();
+          bypassSave[0] = flangeOn;
+          bypassSave[1] = distOn;
+          bypassSave[2] = fvOn;
+          delay(300);
+        }
+
+        gslc_ElemSetTxtStr(&m_gui, m_home_bypass, acTxt);
         break;
+        
       case E_HOME_PRESET:
         currentPreset++;
         if (currentPreset == 5)
@@ -100,21 +179,28 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         snprintf(acTxt, MAX_STR, "%d", currentPreset);
         gslc_ElemSetTxtStr(&m_gui, m_current_preset, acTxt);
         break;
+        
       case E_FLANGE_BACK:
         gslc_SetPageCur(&m_gui, 0);
         break;
+        
       case E_FLANGE_BYPASS:
         break;
+        
       case E_REVERB_BACK:
         gslc_SetPageCur(&m_gui, 0);
         break;
+        
       case E_REVERB_BYPASS:
         break;
+        
       case E_AMP_BACK:
         gslc_SetPageCur(&m_gui, 0);
         break;
+        
       case E_AMP_BYPASS:
         break;
+        
 //<Button Enums !End!>
       default:
         break;
@@ -139,44 +225,50 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 
 void setup()
 {
-  AudioMemory(10);
+  AudioMemory(524);
   // ------------------------------------------------
   // Initialize
   // ------------------------------------------------
   Serial.begin(115200);
+  
+  //disconnect effects at first
+  flangeOutCord.disconnect();
+  fvOutCord.disconnect();
+  distOutCord.disconnect();
+  bypassOut.connect();
+  bypassSave[0] = flangeOn;
+  bypassSave[1] = distOn;
+  bypassSave[2] = fvOn;
+  
+  // setup SGTL5000 and master audio
   sgtl5000_1.enable();
   sgtl5000_1.inputSelect(AUDIO_INPUT_LINEIN);
-  sgtl5000_1.volume(0.8);
+  sgtl5000_1.volume(masterVol);
   sgtl5000_1.muteHeadphone();
   sgtl5000_1.unmuteLineout();
-  outMix.gain(0, 0.8);
-  // Wait for USB Serial 
-  //delay(1000);  // NOTE: Some devices require a delay after Serial.begin() before serial port can be used
+  outMix.gain(0, masterVol);
 
-  gslc_InitDebug(&DebugOut);
+  // flange setup
+  short delayline[FLANGE_DELAY_LENGTH];   
+  //flangeBlock.begin(delayline, FLANGE_DELAY_LENGTH, flangeOffset, flangeDepth, flangeModFreq);
 
-  // ------------------------------------------------
+  // Amp setup
+  ampBlock.gain(ampGain);
+
+  // freeverb setup
+  mixFVOut.gain(0, fvWet); // "wet" signal
+  mixFVOut.gain(1, fvDry); // "dry" signal
+  freeverbBlock.roomsize(fvRoomSize);
+  freeverbBlock.damping(fvDamp);
+
   // Create graphic elements
-  // ------------------------------------------------
+  gslc_InitDebug(&DebugOut);
   InitGUIslice_gen();
-
 }
 
-// -----------------------------------
 // Main event loop
-// -----------------------------------
 void loop()
 {
-
-  // ------------------------------------------------
-  // Update GUI Elements
-  // ------------------------------------------------
-  
-  //TODO - Add update code for any text, gauges, or sliders
-  
-  // ------------------------------------------------
   // Periodically call GUIslice update function
-  // ------------------------------------------------
   gslc_Update(&m_gui);
-    
 }
