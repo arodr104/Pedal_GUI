@@ -22,6 +22,10 @@
 // Save some element references for direct access
 //<Save_References !Start!>
 gslc_tsElemRef* m_Amp_Gain_Slider = NULL;
+gslc_tsElemRef* m_Damp_Slider     = NULL;
+gslc_tsElemRef* m_Dry_Slider      = NULL;
+gslc_tsElemRef* m_Room_Slider     = NULL;
+gslc_tsElemRef* m_Wet_Slider      = NULL;
 gslc_tsElemRef* m_current_preset  = NULL;
 gslc_tsElemRef* m_flange_bypass   = NULL;
 gslc_tsElemRef* m_home_bypass     = NULL;
@@ -43,10 +47,10 @@ float flangeOffset = FLANGE_DELAY_LENGTH/4;
 float flangeDepth = FLANGE_DELAY_LENGTH/4;
 float flangeModFreq = 1;
 float ampGain = 20;
-float fvDry = 0.4;
-float fvWet = 0.9;
-float fvRoomSize = 0.6;
-float fvDamp = 0.4;
+float fvDry = 0.5;
+float fvWet = 0.5;
+float fvRoomSize = 0.5;
+float fvDamp = 0.5;
 float maxDepth = 165;
 float maxFreq = 3.5;
 float masterVol = 0.8;
@@ -118,7 +122,6 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
     // From the element's ID we can determine which button was pressed. 
     switch (pElem->nId) {
 //<Button Enums !Start!>
-
       // -------------------------------
       // Home Screen
       // -------------------------------
@@ -139,23 +142,13 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         {
           homeBypass = true;
           snprintf(acTxt, MAX_STR, "ON");
-          bypassOut.disconnect();
-          
-          if (bypassSave[0] == true)
-            {
-              flangeOutCord.connect();
-            }
-            
-          if (bypassSave[1] == true)
-            {
-              distOutCord.connect();
-            }
-            
-          if (bypassSave[2] == true)
-            {
-              fvOutCord.connect();
-            }
-            
+          bypassSave[0] = flangeOn;
+          bypassSave[1] = distOn;
+          bypassSave[2] = fvOn;
+          flangeOutCord.disconnect();
+          fvOutCord.disconnect();
+          distOutCord.disconnect();
+          bypassOut.disconnect();         
           delay(300);
         }
         
@@ -163,13 +156,23 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         {
           homeBypass = false;
           snprintf(acTxt, MAX_STR, "OFF");
-          flangeOutCord.disconnect();
-          fvOutCord.disconnect();
-          distOutCord.disconnect();
           bypassOut.connect();
-          bypassSave[0] = flangeOn;
-          bypassSave[1] = distOn;
-          bypassSave[2] = fvOn;
+
+           if (bypassSave[0] == true)
+          {
+            flangeOutCord.connect();
+          }
+            
+          if (bypassSave[1] == true)
+          {
+            distOutCord.connect();
+          }
+            
+          if (bypassSave[2] == true)
+          {
+            fvOutCord.connect();
+          }
+          
           delay(300);
         }
         gslc_ElemSetTxtStr(&m_gui, m_home_bypass, acTxt);
@@ -183,7 +186,6 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         snprintf(acTxt, MAX_STR, "%d", currentPreset);
         gslc_ElemSetTxtStr(&m_gui, m_current_preset, acTxt);
         break;
-        
       // -------------------------------
       // Flange Screen
       // -------------------------------
@@ -276,6 +278,26 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
       ampBlock.gain(nVal * 0.4);
       break;
 
+    case E_ROOM_SLIDER:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Room_Slider);
+      freeverbBlock.roomsize(nVal * 0.01);
+      break;
+    case E_DAMP_SLIDER:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Room_Slider);
+      freeverbBlock.damping(nVal * 0.01);
+      break;
+    case E_DRY_SLIDER:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Dry_Slider);
+      fvDry = nVal * 0.01;
+      break;
+    case E_WET_SLIDER:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Wet_Slider);
+      fvWet = nVal * 0.01;
+      break;
 //<Slider Enums !End!>
     default:
       break;

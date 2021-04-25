@@ -49,13 +49,15 @@
 //<Enum !Start!>
 enum {E_PG_MAIN,E_FLANGE_PAGE,E_REVERB_PAGE,E_AMP_PAGE};
 enum {E_AMP_BACK,E_AMP_BYPASS,E_AMP_BYPASS_STATUS,E_AMP_GAIN
-      ,E_AMP_GAIN_SLIDER,E_AMP_TITLE,E_FLANGE_BACK,E_FLANGE_BYPASS
+      ,E_AMP_GAIN_SLIDER,E_AMP_TITLE,E_DAMP_SLIDER,E_DRY_SLIDER
+      ,E_ELEM_TEXT26,E_FLANGE_BACK,E_FLANGE_BYPASS
       ,E_FLANGE_BYPASS_STATUS,E_FLANGE_DEPTH,E_FLANGE_MOD_FREQ
       ,E_FLANGE_OFFSET,E_FLANGE_TITLE,E_HOME_AMP,E_HOME_BYPASS
       ,E_HOME_BYPASS_STATUS,E_HOME_CURR_PRESET,E_HOME_FLANGE
       ,E_HOME_PRESET,E_HOME_REVERB,E_HOME_TITLE_TEXT,E_REVERB_BACK
       ,E_REVERB_BYPASS,E_REVERB_BYPASS_STATUS,E_REVERB_DAMPING
-      ,E_REVERB_DRY_LEVEL,E_REVERB_ROOM_SIZE,E_REVERB_TITLE};
+      ,E_REVERB_DRY_LEVEL,E_REVERB_ROOM_SIZE,E_REVERB_TITLE
+      ,E_ROOM_SLIDER,E_WET_SLIDER};
 // Must use separate enum for fonts with MAX_FONT at end to use gslc_FontSet.
 enum {E_FREEMONO9,E_FREESANS9,MAX_FONT};
 //<Enum !End!>
@@ -76,7 +78,7 @@ enum {E_FREEMONO9,E_FREESANS9,MAX_FONT};
 #define MAX_ELEM_FLANGE_PAGE 7 // # Elems total on page
 #define MAX_ELEM_FLANGE_PAGE_RAM MAX_ELEM_FLANGE_PAGE // # Elems in RAM
 
-#define MAX_ELEM_REVERB_PAGE 7 // # Elems total on page
+#define MAX_ELEM_REVERB_PAGE 12 // # Elems total on page
 #define MAX_ELEM_REVERB_PAGE_RAM MAX_ELEM_REVERB_PAGE // # Elems in RAM
 
 #define MAX_ELEM_AMP_PAGE 6 // # Elems total on page
@@ -100,6 +102,10 @@ gslc_tsElem                     m_asPage3Elem[MAX_ELEM_REVERB_PAGE_RAM];
 gslc_tsElemRef                  m_asPage3ElemRef[MAX_ELEM_REVERB_PAGE];
 gslc_tsElem                     m_asPage4Elem[MAX_ELEM_AMP_PAGE_RAM];
 gslc_tsElemRef                  m_asPage4ElemRef[MAX_ELEM_AMP_PAGE];
+gslc_tsXSlider                  m_sXSlider2;
+gslc_tsXSlider                  m_sXSlider3;
+gslc_tsXSlider                  m_sXSlider4;
+gslc_tsXSlider                  m_sXSlider5;
 gslc_tsXSlider                  m_sXSlider1;
 
 #define MAX_STR                 100
@@ -113,6 +119,10 @@ gslc_tsXSlider                  m_sXSlider1;
 // Element References for direct access
 //<Extern_References !Start!>
 extern gslc_tsElemRef* m_Amp_Gain_Slider;
+extern gslc_tsElemRef* m_Damp_Slider;
+extern gslc_tsElemRef* m_Dry_Slider;
+extern gslc_tsElemRef* m_Room_Slider;
+extern gslc_tsElemRef* m_Wet_Slider;
 extern gslc_tsElemRef* m_current_preset;
 extern gslc_tsElemRef* m_flange_bypass;
 extern gslc_tsElemRef* m_home_bypass;
@@ -269,7 +279,7 @@ void InitGUIslice_gen()
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
   // Create E_REVERB_ROOM_SIZE text label
-  pElemRef = gslc_ElemCreateTxt(&m_gui,E_REVERB_ROOM_SIZE,E_REVERB_PAGE,(gslc_tsRect){10,30,91,15},
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_REVERB_ROOM_SIZE,E_REVERB_PAGE,(gslc_tsRect){10,35,91,15},
     (char*)"Room Size:",0,E_FREESANS9);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   
@@ -294,6 +304,43 @@ void InitGUIslice_gen()
     (char*)m_sDisplayText14,5,E_FREESANS9);
   gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
   m_reverb_bypass = pElemRef;
+  
+  // Create E_ELEM_TEXT26 text label
+  pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_TEXT26,E_REVERB_PAGE,(gslc_tsRect){10,124,84,15},
+    (char*)"Wet Level:",0,E_FREESANS9);
+  gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+
+  // Create slider E_ROOM_SLIDER 
+  pElemRef = gslc_ElemXSliderCreate(&m_gui,E_ROOM_SLIDER,E_REVERB_PAGE,&m_sXSlider2,
+          (gslc_tsRect){115,34,140,20},0,100,50,5,false);
+  gslc_ElemXSliderSetStyle(&m_gui,pElemRef,false,GSLC_COL_BLUE,10,5,GSLC_COL_GRAY_DK2);
+  gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT1,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_Room_Slider = pElemRef;
+
+  // Create slider E_DAMP_SLIDER 
+  pElemRef = gslc_ElemXSliderCreate(&m_gui,E_DAMP_SLIDER,E_REVERB_PAGE,&m_sXSlider3,
+          (gslc_tsRect){115,63,140,20},0,100,50,5,false);
+  gslc_ElemXSliderSetStyle(&m_gui,pElemRef,false,GSLC_COL_BLUE,10,5,GSLC_COL_GRAY_DK2);
+  gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT1,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_Damp_Slider = pElemRef;
+
+  // Create slider E_DRY_SLIDER 
+  pElemRef = gslc_ElemXSliderCreate(&m_gui,E_DRY_SLIDER,E_REVERB_PAGE,&m_sXSlider4,
+          (gslc_tsRect){115,92,140,20},0,100,50,5,false);
+  gslc_ElemXSliderSetStyle(&m_gui,pElemRef,false,GSLC_COL_BLUE,10,5,GSLC_COL_GRAY_DK2);
+  gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT1,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_Dry_Slider = pElemRef;
+
+  // Create slider E_WET_SLIDER 
+  pElemRef = gslc_ElemXSliderCreate(&m_gui,E_WET_SLIDER,E_REVERB_PAGE,&m_sXSlider5,
+          (gslc_tsRect){115,123,140,20},0,100,50,5,false);
+  gslc_ElemXSliderSetStyle(&m_gui,pElemRef,false,GSLC_COL_BLUE,10,5,GSLC_COL_GRAY_DK2);
+  gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+  gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT1,GSLC_COL_BLACK,GSLC_COL_BLACK);
+  m_Wet_Slider = pElemRef;
 
   // -----------------------------------
   // PAGE: E_AMP_PAGE
