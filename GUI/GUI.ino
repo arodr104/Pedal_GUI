@@ -291,12 +291,12 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
     case E_DRY_SLIDER:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_Dry_Slider);
-      fvDry = nVal * 0.01;
+      mixFVOut.gain(1, nVal * 0.01);
       break;
     case E_WET_SLIDER:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_Wet_Slider);
-      fvWet = nVal * 0.01;
+      mixFVOut.gain(0, nVal * 0.01);
       break;
 //<Slider Enums !End!>
     default:
