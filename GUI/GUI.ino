@@ -23,10 +23,8 @@
 //<Save_References !Start!>
 gslc_tsElemRef* m_Amp_Gain_Slider = NULL;
 gslc_tsElemRef* m_Damp_Slider     = NULL;
-gslc_tsElemRef* m_Depth_Slider    = NULL;
 gslc_tsElemRef* m_Dry_Slider      = NULL;
 gslc_tsElemRef* m_Mod_Freq_Slider = NULL;
-gslc_tsElemRef* m_Offset_Slider   = NULL;
 gslc_tsElemRef* m_Room_Slider     = NULL;
 gslc_tsElemRef* m_Wet_Slider      = NULL;
 gslc_tsElemRef* m_current_preset  = NULL;
@@ -293,14 +291,6 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
       ampBlock.gain(ampGain);
       break;
 
-    case E_FLANGE_OFFSET_SLIDER:
-      // Fetch the slider position
-      nVal = gslc_ElemXSliderGetPos(pGui,m_Offset_Slider);
-      break;
-    case E_FLANGE_DEPTH_SLIDER:
-      // Fetch the slider position
-      nVal = gslc_ElemXSliderGetPos(pGui,m_Depth_Slider);
-      break;
     case E_FLANGE_MOD_FREQ_SLIDER:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_Mod_Freq_Slider);
