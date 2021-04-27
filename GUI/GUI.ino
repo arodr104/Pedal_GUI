@@ -54,6 +54,7 @@ float fvDamp = 0.5;
 float maxDepth = 165;
 float maxFreq = 3.5;
 float masterVol = 0.8;
+short delayline[FLANGE_DELAY_LENGTH];
 
 //setting on/off logic
 bool fvOn = false;
@@ -89,10 +90,10 @@ AudioMixer4              outMix;
 AudioOutputI2S           lineOut;     
 AudioConnection          fvInCord(lineIn, 1, freeverbBlock, 0);
 AudioConnection          distInCord(lineIn, 1, ampBlock, 0);
-AudioConnection          flangeInCord(lineIn, 1, flangeBlock, 0);
+AudioConnection          flangeInCord(lineIn, 0, flangeBlock, 0);
 AudioConnection          fvDryCord(lineIn, 1, mixFVOut, 1);
 AudioConnection          fvMixCord(freeverbBlock, 0, mixFVOut, 0);
-AudioConnection          flangeOutCord(flangeBlock, 0, outMix, 2);
+AudioConnection          flangeOutCord(flangeBlock, 0, outMix, 0);
 AudioConnection          fvOutCord(mixFVOut, 0, outMix, 0);
 AudioConnection          distOutCord(ampBlock, 0, outMix, 1);
 AudioConnection          outputCord(outMix, 0, lineOut, 1);     
@@ -331,8 +332,7 @@ void setup()
   outMix.gain(0, masterVol);
 
   // flange setup
-  short delayline[FLANGE_DELAY_LENGTH];   
-  //flangeBlock.begin(delayline, FLANGE_DELAY_LENGTH, flangeOffset, flangeDepth, flangeModFreq);
+  flangeBlock.begin(delayline, FLANGE_DELAY_LENGTH, flangeOffset, flangeDepth, flangeModFreq);
 
   // Amp setup
   ampBlock.gain(ampGain);
