@@ -23,7 +23,10 @@
 //<Save_References !Start!>
 gslc_tsElemRef* m_Amp_Gain_Slider = NULL;
 gslc_tsElemRef* m_Damp_Slider     = NULL;
+gslc_tsElemRef* m_Depth_Slider    = NULL;
 gslc_tsElemRef* m_Dry_Slider      = NULL;
+gslc_tsElemRef* m_Mod_Freq_Slider = NULL;
+gslc_tsElemRef* m_Offset_Slider   = NULL;
 gslc_tsElemRef* m_Room_Slider     = NULL;
 gslc_tsElemRef* m_Wet_Slider      = NULL;
 gslc_tsElemRef* m_current_preset  = NULL;
@@ -56,14 +59,14 @@ float maxFreq = 3.5;
 float masterVol = 0.8;
 short delayline[FLANGE_DELAY_LENGTH];
 
-//setting on/off logic
+// setting on/off logic
 bool fvOn = false;
 bool distOn = false;
 bool flangeOn = false;
 bool bypassOn = false;
 int activeEff = 0;
 
-//save states and their info
+// save states and their info
 char currentEffect;
 int16_t currentPreset = 0;
 bool save1[3] = { false };
@@ -90,10 +93,10 @@ AudioMixer4              outMix;
 AudioOutputI2S           lineOut;     
 AudioConnection          fvInCord(lineIn, 1, freeverbBlock, 0);
 AudioConnection          distInCord(lineIn, 1, ampBlock, 0);
-AudioConnection          flangeInCord(lineIn, 0, flangeBlock, 0);
+AudioConnection          flangeInCord(lineIn, 1, flangeBlock, 0);
 AudioConnection          fvDryCord(lineIn, 1, mixFVOut, 1);
 AudioConnection          fvMixCord(freeverbBlock, 0, mixFVOut, 0);
-AudioConnection          flangeOutCord(flangeBlock, 0, outMix, 0);
+AudioConnection          flangeOutCord(flangeBlock, 0, outMix, 2);
 AudioConnection          fvOutCord(mixFVOut, 0, outMix, 0);
 AudioConnection          distOutCord(ampBlock, 0, outMix, 1);
 AudioConnection          outputCord(outMix, 0, lineOut, 1);     
@@ -123,9 +126,6 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
     // From the element's ID we can determine which button was pressed. 
     switch (pElem->nId) {
 //<Button Enums !Start!>
-      // -------------------------------
-      // Home Screen
-      // -------------------------------
       case E_HOME_FLANGE:
         gslc_SetPageCur(&m_gui, 1);
         break;
@@ -158,7 +158,6 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
           homeBypass = false;
           snprintf(acTxt, MAX_STR, "OFF");
           bypassOut.connect();
-
            if (bypassSave[0] == true)
           {
             flangeOutCord.connect();
@@ -195,6 +194,20 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
         break;
         
       case E_FLANGE_BYPASS:
+        if (flangeOn == false) // off turning on
+        {
+          snprintf(acTxt, MAX_STR, "ON");
+          flangeOutCord.connect();
+          flangeOn = true;
+        }
+        
+        else // on turning off
+        {
+          snprintf(acTxt, MAX_STR, "OFF");
+          flangeOutCord.disconnect();
+          flangeOn = false;
+        }
+        gslc_ElemSetTxtStr(&m_gui, m_flange_bypass, acTxt);
         break;
       // -------------------------------
       // Reverb Screen
@@ -276,28 +289,47 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
     case E_AMP_GAIN_SLIDER:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_Amp_Gain_Slider);
-      ampBlock.gain(nVal * 0.4);
+      ampGain = nVal * 0.4;
+      ampBlock.gain(ampGain);
       break;
 
-    case E_ROOM_SLIDER:
+    case E_FLANGE_OFFSET_SLIDER:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Offset_Slider);
+      break;
+    case E_FLANGE_DEPTH_SLIDER:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Depth_Slider);
+      break;
+    case E_FLANGE_MOD_FREQ_SLIDER:
+      // Fetch the slider position
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Mod_Freq_Slider);
+      flangeModFreq = nVal * 0.01;
+      flangeBlock.voices(flangeOffset, flangeDepth, flangeModFreq);
+      break;
+    case E_REVERB_ROOM_SLIDER:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_Room_Slider);
-      freeverbBlock.roomsize(nVal * 0.01);
+      fvRoomSize = nVal * 0.01;
+      freeverbBlock.roomsize(fvRoomSize);
       break;
-    case E_DAMP_SLIDER:
+    case E_REVERB_DAMP_SLIDER:
       // Fetch the slider position
-      nVal = gslc_ElemXSliderGetPos(pGui,m_Room_Slider);
-      freeverbBlock.damping(nVal * 0.01);
+      nVal = gslc_ElemXSliderGetPos(pGui,m_Damp_Slider);
+      fvDamp = nVal * 0.01;
+      freeverbBlock.damping(fvDamp);
       break;
-    case E_DRY_SLIDER:
+    case E_REVERB_DRY_SLIDER:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_Dry_Slider);
-      mixFVOut.gain(1, nVal * 0.01);
+      fvDry = nVal * 0.01;
+      mixFVOut.gain(1, fvDry);
       break;
-    case E_WET_SLIDER:
+    case E_REVERB_WET_SLIDER:
       // Fetch the slider position
       nVal = gslc_ElemXSliderGetPos(pGui,m_Wet_Slider);
-      mixFVOut.gain(0, nVal * 0.01);
+      fvWet = nVal * 0.01;
+      mixFVOut.gain(0, fvWet);
       break;
 //<Slider Enums !End!>
     default:
@@ -351,6 +383,12 @@ void setup()
 // Main event loop
 void loop()
 {
+  Serial.print(flangeOffset);
+  Serial.print(" ");
+  Serial.print(flangeDepth);
+  Serial.print(" ");
+  Serial.print(flangeModFreq);
+  Serial.println();
   // Periodically call GUIslice update function
   gslc_Update(&m_gui);
 }
